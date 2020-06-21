@@ -1,62 +1,72 @@
-# Hand-Gestures-Recognition-ASL
-[![GitHub contributors](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https: // github.com/ShahrozTanveer/Hand-Gestures-Recognition-ASL/pulls)
-[![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.png?v=103)](https: // opensource.com/users/sharoztanveer)
-[![Python](https://img.shields.io/badge/Made % 20with-Python-1f425f.svg)](https: // www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https: // github.com/ShahrozTanveer/Hand-Gestures-Recognition-ASL/blob/master/LICENSE)
-[![GitHub followers](https://img.shields.io/github/followers/ShahrozTanveer.svg?style=social & label=Follow)](https: // github.com/ShahrozTanveer)
-[![Twitter Follow](https://img.shields.io/twitter/follow/saadtanveer3121.svg?style=social)](https: // twitter.com/saadtanveer3121)
+import cv2
+import numpy as np
+# Loading  Yolo weights
+net = cv2.dnn.readNet("./Yolo/yolov3ASL.weights", "./Yolo/yolov3ASL.cfg")
+classes = list()
+f = open("./Yolo/yolov3ASL.names", "r")  # read .names file
+for line in f.readlines():  # loop each line in file
+    classes.append(line.strip())
+layer_names = net.getLayerNames()  # get layes names
+layer = list()  # init layes list
+for i in net.getUnconnectedOutLayers():
+    layer.append(layer_names[i[0] - 1])
+colors = np.random.uniform(0, 255, size=(len(classes), 3))
+
+# provide video path in string or 0== internal webcam 2== external webcam
+cap = cv2.VideoCapture(2)
+if (cap.isOpened() == False):
+    print("Error opening video stream or file")
 
 
-Please consider following this project's author, [Sharoz Tanveer](https: // github.com/ShahrozTanveer), and consider starring the project to show your: heart: and support.
+while(cap.isOpened()):
+    # get video Frame by Frame
+    ret, frame = cap.read()
+    if ret == True:
 
-# Project Features.
-* Detects real time American sign language Counting Recognition.
+        img = frame  # set img to frame.
+        height, width, _ = img.shape
+        blobObject = cv2.dnn.blobFromImage(
+            img, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
+        net.setInput(blobObject)
+        outputs = net.forward(layer)  # get next layer
+        class_ids = list()
+        confidences = list()
+        boxes = list()
+        for out in outputs:
+            for detection in out:
+                scores = detection[5:]
+                class_id = np.argmax(scores)
+                confidence = scores[class_id]
+                if confidence > 0.3:  # tresh >0.5
 
-# Prerequisites
-* Python3
-* OpenCV
-* Numpy
+                    center_x = int(detection[0] * width)
+                    center_y = int(detection[1] * height)
+                    w = int(detection[2] * width)
+                    h = int(detection[3] * height)
+                    # get points for rectangle
+                    x = int(center_x - w / 2)
+                    y = int(center_y - h / 2)
+                    boxes.append([x, y, w, h])
+                    confidences.append(float(confidence))
+                    class_ids.append(class_id)
+        # number of dectected objects in frame
+        dec = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4)
 
-
-## Yolo and Darknet-53
-* For Real time object Detection[Yolo](https: // pjreddie.com/darknet/yolo /) (You Only Look Once) is used.
-* [Darknet-53](https: // pjreddie.com/darknet /) is used to train model for face detection.
-* Darknet is an open source neural network framework by[Joseph Redmon](https: // github.com/pjreddie)
-
-
-# This application is tested on  Linux and macOS*
-
-* Clone this Repo
-```bash
-$ git clone https: // github.com/ShahrozTanveer/Hand-Gestures-Recognition-ASL.git
-```
-* Install requirements
-```bash
-$ pip3 install - r requirements.txt
-```
-
-# Download Yolo Weights and move it in Yolo Folder.
-[Download!](https: // drive.google.com/file/d/1kTjSXHp5Y1EPLIMjqTvio0yaZCDNKook/view?usp=sharing)
-
-* Run
-```bash
-$ pyhton3 script.py
-```
-*make sure before running code paste .cfg and .weights files*
-
-# Check out my Face detection and recognition with Deep learning
-* [Face detection and recognition!](https: // github.com/ShahrozTanveer/Face-Detection-and-Recognition)
-
-# Author
-
-**Sharoz Tanveer**
-
-* [LinkedIn Profile](https: // www.linkedin.com/in/sharoztanveer/)
-* [GitHub Profile](https: // github.com/ShahrozTanveer)
-* [Twitter Profile](https: // twitter.com/saadtanveer3121)
+        for i in range(len(boxes)):
+            if i in dec:
+                x, y, w, h = boxes[i]
+                label = str(classes[class_ids[i]])  # get label
+                # each classs has specific color defined above
+                color = colors[i]
+                cv2.rectangle(img, (x, y), (x + w, y + h),
+                              color, 2)  # create rectangle
+                cv2.putText(img, label, (10, 50), cv2.FONT_ITALIC, 2, color, 3)
+        cv2.imshow("Image", img)
+        if cv2.waitKey(25) & 0xFF == ord('q'):
+            break
+    else:
+        break
 
 
-# License
-
-Copyright © 2020, [Sharoz Tanveer](https: // github.com/ShahrozTanveer).
-Released under the[MIT License](LICENSE).
+cap.release()
+cv2.destroyAllWindows()
