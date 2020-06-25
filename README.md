@@ -42,8 +42,12 @@ $ pip3 install -r requirements.txt
 ```
 
 ### Download Yolo Weights and move it in Yolo Folder.
+<<<<<<< HEAD
 
 [Download!]()
+=======
+[Download!](https://drive.google.com/file/d/11uRz9slxOS54CmuaWtnzVOFVUNYufN2i/view?usp=sharing)
+>>>>>>> d274cc28193712c010012cf80d4efd7bffe17aa1
 
 - Run
 
