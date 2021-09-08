@@ -51,7 +51,7 @@ $ pip3 install -r requirements.txt
 - Run
 
 ```bash
-$ pyhton3 script.py
+$ python3 script.py
 ```
 
 - make sure before running code paste .weights file Directory\*
